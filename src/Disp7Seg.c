@@ -22,7 +22,7 @@ TimerSwHandle timerSwHandle;
 uint8_t digitsValue[DISPLAY_7_SEGMENT_DIGITS_COUNT];
 uint8_t segCode[12]= {
 	//  a  b  c  d  e  f  g  .
-	0b00000011,  // 0
+	0b11111100,  // 0
 	0b01100000,  // 1
 	0b11011010,  // 2
 	0b11110010,  // 3
@@ -116,6 +116,7 @@ StatusError Disp7SegSetVal(float value)
 
 static void FloatToBuff(float value,uint8_t * data)
 {
+	bool startCountIncrease = false;
 	float decVal;
 	uint8_t localdigitCount = 0;
 	uint8_t tmp;
@@ -155,7 +156,7 @@ static void FloatToBuff(float value,uint8_t * data)
 	
 	localdecValue = (localVlaue * (float)decimalMultipler) - (float)((int)localVlaue * (int)decimalMultipler);
 	
-	while(localVlaue >= 1)
+	while(decVal >= 1)
 	{
 		if (localVlaue >= decVal)
 		{
@@ -163,8 +164,15 @@ static void FloatToBuff(float value,uint8_t * data)
 			data[localdigitCount] =  tmp;
 			localdigitCount++;
 			localVlaue -= (float)tmp * decVal;
+			startCountIncrease = true;
+		}
+		else if(startCountIncrease)
+		{
+			data[localdigitCount] = 0;
+			localdigitCount++;
 		}
 		decVal /= 10;
+		
 	}
 	
 	if (localdigitCount >= DISPLAY_7_SEGMENT_DIGITS_COUNT)
@@ -184,7 +192,7 @@ static void FloatToBuff(float value,uint8_t * data)
 	
 	while(localdigitCount <= DISPLAY_7_SEGMENT_DIGITS_COUNT)
 	{
-		tmp = (uint8_t)localdecValue / decVal;
+		tmp = (uint8_t)(localdecValue / decVal);
 		data[localdigitCount] =  tmp;
 		localdigitCount++;
 		localdecValue -= (float)tmp * decVal;
