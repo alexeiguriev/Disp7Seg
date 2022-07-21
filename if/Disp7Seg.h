@@ -17,7 +17,10 @@ void Disp7SegInit(void);
 
 void Disp7SegRutine(void);
 
-StatusError Disp7SegSetVal(float value);
+StatusError Disp7SegSetFloatVal(float value);
 
+StatusError Disp7SegSetByDigit(uint8_t digitIndex, uint8_t digitValue, bool withComa);
+
+StatusError Disp7SegSetByDigitCostum(uint8_t digitIndex, uint8_t digitValue);
 
 #endif /* DISP7SEG_H_ */

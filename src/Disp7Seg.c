@@ -14,6 +14,8 @@
 #define COMA_SIGN		255
 #define COMA_INDEX		10
 #define MINUS_INDEX		11
+#define ZERO_INDEX		0
+#define MAX_DIGIT_VALUE 9
 
 
 static uint8_t digitCount = 0;
@@ -83,35 +85,48 @@ void Disp7SegRutine(void)
 	}
 }
 
-static uint8_t tempDataBuff[DISPLAY_7_SEGMENT_DIGITS_COUNT + 1];
-
-StatusError Disp7SegSetVal(float value)
+StatusError Disp7SegSetFloatVal(float value)
 {
-	uint8_t mainIndex = 0, tempIndex = 0;
-	FloatToBuff(value,tempDataBuff);
-	
-	while(mainIndex < DISPLAY_7_SEGMENT_DIGITS_COUNT)
-	{
-		if (tempDataBuff[tempIndex] == NEGATIVE_SIGN)
-		{
-			digitsValue[mainIndex] = segCode[MINUS_INDEX];
-			mainIndex++;
-			tempIndex++;
-		}
-		else if (tempDataBuff[tempIndex] == COMA_SIGN)
-		{
-			tempIndex++;
-			digitsValue[mainIndex - 1] |= segCode[COMA_INDEX];
-		}
-		else
-		{
-			digitsValue[mainIndex] = segCode[tempDataBuff[tempIndex]];
-			mainIndex++;
-			tempIndex++;
-		}
-	}
+	FloatToBuff(value,digitsValue);
 	
 	return StatusErrNone;
+}
+
+StatusError Disp7SegSetByDigit(uint8_t digitIndex, uint8_t digitValue, bool withComa)
+{
+	uint8_t localDigitValue;
+	if (digitIndex < DISPLAY_7_SEGMENT_DIGITS_COUNT)
+	{
+		if (digitValue > MAX_DIGIT_VALUE)
+		{
+			return StatusErrRange;
+		}
+		localDigitValue = segCode[digitValue];
+		if (withComa)
+		{
+			localDigitValue |= segCode[COMA_INDEX];
+		}
+		
+		digitsValue[digitIndex] = localDigitValue;
+		return StatusErrNone;
+	}
+	else
+	{
+		return StatusErrIndex;
+	}
+}
+
+StatusError Disp7SegSetByDigitCostum(uint8_t digitIndex, uint8_t digitValue)
+{
+	if (digitIndex < DISPLAY_7_SEGMENT_DIGITS_COUNT)
+	{
+		digitsValue[digitIndex] = digitValue;
+		return StatusErrNone;
+	}
+	else
+	{
+		return StatusErrIndex;
+	}
 }
 
 static void FloatToBuff(float value,uint8_t * data)
@@ -127,7 +142,7 @@ static void FloatToBuff(float value,uint8_t * data)
 	if (value < 0)
 	{
 		value *= -1;
-		data[localdigitCount] = (uint8_t) NEGATIVE_SIGN;
+		data[localdigitCount] = segCode[MINUS_INDEX];
 		localdigitCount++;
 		decVal = (float)pow((double)10,(double)(DISPLAY_7_SEGMENT_DIGITS_COUNT - 2));
 		
@@ -161,14 +176,14 @@ static void FloatToBuff(float value,uint8_t * data)
 		if (localVlaue >= decVal)
 		{
 			tmp = (uint8_t)(localVlaue / decVal);
-			data[localdigitCount] =  tmp;
+			data[localdigitCount] = segCode[tmp];
 			localdigitCount++;
 			localVlaue -= (float)tmp * decVal;
 			startCountIncrease = true;
 		}
 		else if(startCountIncrease)
 		{
-			data[localdigitCount] = 0;
+			data[localdigitCount] = segCode[ZERO_INDEX];
 			localdigitCount++;
 		}
 		decVal /= 10;
@@ -185,15 +200,15 @@ static void FloatToBuff(float value,uint8_t * data)
 		data[localdigitCount] = 0;
 		localdigitCount++;
 	}
-	data[localdigitCount] = (uint8_t) COMA_SIGN;
-	localdigitCount++;
+	
+	data[localdigitCount - 1] |= segCode[COMA_SIGN];
 	
 	decVal = decimalMultipler / 10;
 	
 	while(localdigitCount <= DISPLAY_7_SEGMENT_DIGITS_COUNT)
 	{
 		tmp = (uint8_t)(localdecValue / decVal);
-		data[localdigitCount] =  tmp;
+		data[localdigitCount] = segCode[tmp];
 		localdigitCount++;
 		localdecValue -= (float)tmp * decVal;
 		decVal /= 10;
