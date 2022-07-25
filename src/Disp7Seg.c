@@ -48,7 +48,7 @@ void Disp7SegInit(void)
 	StatusError err;
 	for(uint8_t index = 0; index < DISPLAY_7_SEGMENT_DIGITS_COUNT; index++)
 	{
-		digitsValue[index] = 0;
+		digitsValue[index] = segCode[ZERO_INDEX];
 	}
 	disp7SegHandleConfig = Disp7SegCfgInitAndGet();	
 	
